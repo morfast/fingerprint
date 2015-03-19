@@ -12,7 +12,7 @@ void hashlittle2(
   uint32_t   *pc,        /* IN: primary initval, OUT: primary hash */
   uint32_t   *pb);        /* IN: secondary initval, OUT: secondary hash */
 
-uint64_t JenkinsHash(char *data, uint32_t size)
+uint64_t JenkinsHash(unsigned char *data, uint32_t size)
 {
     uint32_t c, b;
     uint64_t result;
@@ -27,7 +27,7 @@ uint64_t JenkinsHash(char *data, uint32_t size)
     return result;
 }
 
-static char sample_table[SAMPLE_TABLE_SIZE];
+static unsigned char sample_table[SAMPLE_TABLE_SIZE];
 
 /* initialize the byte table */
 int init_sample_byte()
@@ -53,7 +53,7 @@ pdata:  input data  (INPUT)
 size:   size of data  (INPUT)
 offset: offset of the block for fingerprint (OUTPUT)
 fp: fingerprint  (OUTPUT) */
-int sample_byte(char *pdata, 
+int sample_byte(unsigned char *pdata, 
 			    uint32_t size, 
 			    uint32_t wsize, 
 			    uint32_t *offset,
@@ -66,12 +66,34 @@ int sample_byte(char *pdata,
     p = wsize;
 
     for(i = 0; i < (size-wsize); i++) {
+//        printf("%d\n", pdata[i]);
         if (sample_table[pdata[i]] == 1) {
+            printf("counting fingerprint\n");
             *offset = i;
             *fingerprint = JenkinsHash(pdata + i, wsize);
             *skip = p/2;
+            return 0;
         }
     }
+    return 1;
+
+}
+
+int main(void)
+{
+    unsigned char data[1000];
+
+    uint32_t offset;
+    uint32_t skip;
+    uint64_t fp;
+    int i;
+
+    for (i = 0; i < 1000; i++) {
+        data[i] = i % 256;
+    }
+
+    init_sample_byte();
+    sample_byte(data, 1000, 32, &offset, &skip, &fp);
 
     return 0;
 }
